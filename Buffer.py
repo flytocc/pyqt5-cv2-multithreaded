@@ -14,7 +14,7 @@ class Buffer(object):
         # Create mutex
         self.queueProtect = QMutex()
         # Create queue
-        self.queue = Queue()
+        self.queue = Queue(self.bufferSize)
 
     def add(self, data, dropIfFull=False):
         # Acquire semaphore
@@ -52,7 +52,7 @@ class Buffer(object):
             self.queueProtect.unlock()
             # Release semaphore
             self.usedSlots.release()
-            # Release semaphore
+        # Release semaphore
         self.clearBuffer_add.release()
 
     def get(self):
