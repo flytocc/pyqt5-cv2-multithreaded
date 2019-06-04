@@ -3,20 +3,29 @@ from PyQt5.QtCore import QThread
 # Version information
 APP_VERSION = '2.3.3-Python'
 
-# Url mode
-DEFAULT_URL_MODE = 'device url'  # 'device url', 'rtsp', 'filename'
-# Filename
-DEFAULT_FILENAME = ''
-# Device url
-DEFAULT_DEVICE_URL = 'rtsp://'
-DEFAULT_RTSP_USER = ''
-DEFAULT_RTSP_PASSWORD = ''
-DEFAULT_RTSP_IP = ''
-DEFAULT_RTSP_PORT = ''
-DEFAULT_RTSP_CAHHELS = ''
+# SQL
+DEFAULT_SQL_HOST = '121.42.233.94'
+DEFAULT_SQL_PORT = 3306
+DEFAULT_SQL_USER = 'root'
+DEFAULT_SQL_PASSWORD = '56731421'
+DEFAULT_SQL_DataBase = 'heatmap'
+
+DEFAULT_BOXES_BUFFER = 5
+DEFAULT_UPLOAD_ELAPSED_TIME = 200
 
 # Rtsp transport mode
 DEFAULT_TRANSPORT_MODE = 0  # 0 -> none, 1 -> unicast, 2 -> multicast
+# Url mode
+DEFAULT_URL_MODE = 'filename'  # 'device url', 'rtsp', 'filename'
+# Filename
+DEFAULT_FILENAME = 'C:/Users/Lenny/Videos/final.mp4'
+# Device url
+DEFAULT_DEVICE_URL = 'rtsp://admin:caffe2018@192.168.11.101:554/Streaming/Channels/102'
+DEFAULT_RTSP_USER = 'admin'
+DEFAULT_RTSP_PASSWORD = 'caffe2018'
+DEFAULT_RTSP_IP = '192.168.11.100'
+DEFAULT_RTSP_PORT = '554'
+DEFAULT_RTSP_CAHHELS = '102'
 
 # FPS statistics queue lengths
 PROCESSING_FPS_STAT_QUEUE_LENGTH = 32
@@ -51,3 +60,11 @@ DEFAULT_CANNY_THRESHOLD_1 = 10
 DEFAULT_CANNY_THRESHOLD_2 = 00
 DEFAULT_CANNY_APERTURE_SIZE = 3
 DEFAULT_CANNY_L2GRADIENT = False
+
+# Cap url for push button
+CAP_URL = ['/root/testvideo/192.168.11.101_01_2019042515373473.mp4',
+           '/root/testvideo/192.168.11.102_01_20190425153738487.mp4',
+           '/root/testvideo/192.168.11.103_01_20190425153741889.mp4',
+           '/root/testvideo/192.168.11.104_01_20190425153745810.mp4',
+           '/root/testvideo/192.168.11.105_01_20190425153750343.mp4',
+           '/root/testvideo/192.168.11.106_01_20190425153754209.mp4']
