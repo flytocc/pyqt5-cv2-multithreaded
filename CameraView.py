@@ -69,9 +69,6 @@ class CameraView(QWidget, Ui_CameraView):
         self.sharedImageBuffer.removeByDeviceUrl(self.deviceUrl)
 
     def afterProcessingThreadFinshed(self):
-        # Close connect to sql
-        self.cursor.close()
-        self.connect.close()
         qDebug("[%s] WARNING: SQL already disconnected." % self.deviceUrl)
 
     def connectToCamera(self, dropFrameIfBufferFull, apiPreference, capThreadPrio,
