@@ -22,17 +22,6 @@ class Buffer(object):
         # If dropping is enabled, do not block if buffer is full
         if dropIfFull:
             # Try and acquire semaphore to add item
-
-            # Drop new frame
-            # if self.freeSlots.tryAcquire():
-            #     # Add item to queue
-            #     self.queueProtect.lock()
-            #     self.queue.put(data)
-            #     self.queueProtect.unlock()
-            #     # Release semaphore
-            #     self.usedSlots.release()
-
-            # Drop oldest frame
             ret = self.freeSlots.tryAcquire()
             self.queueProtect.lock()
             if not ret:

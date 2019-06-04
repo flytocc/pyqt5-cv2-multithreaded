@@ -1,22 +1,28 @@
 from PyQt5.QtWidgets import QWidget, QMessageBox, QDialog
 from PyQt5.QtCore import qDebug, QRect, pyqtSignal, Qt
 from PyQt5.QtGui import QPixmap
+import time
 
 from ui_CameraView import Ui_CameraView
 from CaptureThread import CaptureThread
 from ImageProcessingSettingsDialog import ImageProcessingSettingsDialog
 from ProcessingThread import ProcessingThread
 from Structures import *
+from Config import *
 
 
 class CameraView(QWidget, Ui_CameraView):
     newImageProcessingFlags = pyqtSignal(ImageProcessingFlags)
     setROI = pyqtSignal(QRect)
+    doShowImage = pyqtSignal(bool)
+    closeTabByIndex = pyqtSignal(int)
 
-    def __init__(self, parent, deviceUrl, sharedImageBuffer, cameraId):
+    def __init__(self, parent, deviceUrl, sharedImageBuffer, cameraId, detector, sharedBoxesBuffer):
         super(CameraView, self).__init__(parent)
+        self.parent = parent
         self.sharedImageBuffer = sharedImageBuffer
         self.cameraId = cameraId
+        self.sharedBoxesBuffer =sharedBoxesBuffer
         # Create image processing settings dialog
         self.imageProcessingSettingsDialog = ImageProcessingSettingsDialog(self)
         # Setup UI
@@ -44,6 +50,11 @@ class CameraView(QWidget, Ui_CameraView):
         self.frameLabel.menu.triggered.connect(self.handleContextMenuAction)
         self.startButton.released.connect(self.startThread)
         self.pauseButton.released.connect(self.pauseThread)
+        self.detector = detector
+        self.index = -1
+
+    def setTabIndex(self, index):
+        self.index = index
 
     def delete(self):
         if self.isCameraConnected:
@@ -69,7 +80,8 @@ class CameraView(QWidget, Ui_CameraView):
         self.sharedImageBuffer.removeByDeviceUrl(self.deviceUrl)
 
     def afterProcessingThreadFinshed(self):
-        qDebug("[%s] WARNING: SQL already disconnected." % self.deviceUrl)
+        # Close connect to sql
+        pass
 
     def connectToCamera(self, dropFrameIfBufferFull, apiPreference, capThreadPrio,
                         procThreadPrio, enableFrameProcessing, width, height):
@@ -85,25 +97,25 @@ class CameraView(QWidget, Ui_CameraView):
         # Attempt to connect to camera
         if self.captureThread.connectToCamera():
             # Create processing thread
-            self.processingThread = ProcessingThread(self.sharedImageBuffer, self.deviceUrl, self.cameraId)
-
+            self.processingThread = ProcessingThread(self.sharedImageBuffer, self.deviceUrl, self.cameraId,
+                                                     self.detector)
             # Setup signal/slot connections
+            self.doShowImage.connect(self.processingThread.doShowImage)
+            self.processingThread.newBoxes.connect(self.sharedBoxesBuffer.add)
             self.processingThread.newFrame.connect(self.updateFrame)
             self.processingThread.updateStatisticsInGUI.connect(self.updateProcessingThreadStats)
             self.captureThread.updateStatisticsInGUI.connect(self.updateCaptureThreadStats)
             self.imageProcessingSettingsDialog.newImageProcessingSettings.connect(
                 self.processingThread.updateImageProcessingSettings)
+            self.captureThread.end.connect(self.closeTab)
             self.newImageProcessingFlags.connect(self.processingThread.updateImageProcessingFlags)
             self.setROI.connect(self.processingThread.setROI)
-
             # Remove imageBuffer from shared buffer by deviceUrl after captureThread stop/finished
             self.captureThread.finished.connect(self.afterCaptureThreadFinshed)
             self.processingThread.finished.connect(self.afterProcessingThreadFinshed)
-
             # Only enable ROI setting/resetting if frame processing is enabled
             if enableFrameProcessing:
                 self.frameLabel.newMouseData.connect(self.newMouseData)
-
             # Set initial data in processing thread
             self.setROI.emit(
                 QRect(0, 0, self.captureThread.getInputSourceWidth(), self.captureThread.getInputSourceHeight()))
@@ -115,14 +127,15 @@ class CameraView(QWidget, Ui_CameraView):
             # Start processing captured frames (if enabled)
             if enableFrameProcessing:
                 self.processingThread.start(procThreadPrio)
+            # Strat upload sql thread
+            if not self.sharedBoxesBuffer.isRunning():
+                self.sharedBoxesBuffer.start(DEFAULT_SQL_THREAD_PRIO)
 
             # Setup imageBufferBar with minimum and maximum values
             self.imageBufferBar.setMinimum(0)
             self.imageBufferBar.setMaximum(self.sharedImageBuffer.getByDeviceUrl(self.deviceUrl).maxSize())
-
             # Enable "Clear Image Buffer" push button
             self.clearImageBufferButton.setEnabled(True)
-
             # Set text in labels
             self.deviceUrlLabel.setText(self.deviceUrl)
             self.cameraResolutionLabel.setText("%dx%d" % (self.captureThread.getInputSourceWidth(),
@@ -136,6 +149,17 @@ class CameraView(QWidget, Ui_CameraView):
         # Failed to connect to camera
         else:
             return False
+
+    def closeTab(self):
+        ret = QMessageBox.question(self, "video read end",
+                                   "video: %s\n\nRead again?" % self.deviceUrl,
+                                   QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+
+        if ret == QMessageBox.Yes:
+            # read video again
+            self.parent.removeTab(self.index) # pass
+        else:
+            self.parent.removeTab(self.index)
 
     def stopCaptureThread(self):
         qDebug("[%s] About to stop capture thread..." % self.deviceUrl)
@@ -164,17 +188,29 @@ class CameraView(QWidget, Ui_CameraView):
         imageBuffer = self.sharedImageBuffer.getByDeviceUrl(self.deviceUrl)
         # Show [number of images in buffer / image buffer size] in imageBufferLabel
         self.imageBufferLabel.setText("[%d/%d]" % (imageBuffer.size(), imageBuffer.maxSize()))
-        # Show percentage of image buffer full in imageBufferBar
+        # Show percentage of image bufffer full in imageBufferBar
         self.imageBufferBar.setValue(imageBuffer.size())
 
         # Show processing rate in captureRateLabel
-        self.captureRateLabel.setText("{:>6,.2f} fps".format(statData.averageFPS))
+        if statData.averageFPS < 10:
+            nBlank = 2
+        elif statData.averageFPS < 100:
+            nBlank = 1
+        else:
+            nBlank = 0
+        self.captureRateLabel.setText("%.1f%sfps" % (statData.averageFPS, ' ' * nBlank))
         # Show number of frames captured in nFramesCapturedLabel
         self.nFramesCapturedLabel.setText("[%d]" % statData.nFramesProcessed)
 
     def updateProcessingThreadStats(self, statData):
         # Show processing rate in processingRateLabel
-        self.processingRateLabel.setText("{:>6,.2f} fps".format(statData.averageFPS))
+        if statData.averageFPS < 10:
+            nBlank = 2
+        elif statData.averageFPS < 100:
+            nBlank = 1
+        else:
+            nBlank = 0
+        self.processingRateLabel.setText("%.1f%sfps" % (statData.averageFPS, ' ' * nBlank))
         # Show ROI information in roiLabel
         self.roiLabel.setText("(%d,%d) %dx%d" % (self.processingThread.getCurrentROI().x(),
                                                  self.processingThread.getCurrentROI().y(),

@@ -2,6 +2,8 @@ from PyQt5.QtCore import QThread, QMutex, QTime, qDebug, QMutexLocker, pyqtSigna
 from PyQt5.QtGui import QImage
 from queue import Queue
 import cv2
+import numpy as np
+import time
 
 from MatToQImage import matToQImage
 from Structures import *
@@ -10,10 +12,11 @@ from Config import *
 
 class ProcessingThread(QThread):
     newFrame = pyqtSignal(QImage)
+    newBoxes = pyqtSignal(str, list)
     updateStatisticsInGUI = pyqtSignal(ThreadStatisticsData)
     kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
 
-    def __init__(self, sharedImageBuffer, deviceUrl, cameraId, parent=None):
+    def __init__(self, sharedImageBuffer, deviceUrl, cameraId, detector, parent=None):
         super(QThread, self).__init__(parent)
         self.sharedImageBuffer = sharedImageBuffer
         self.cameraId = cameraId
@@ -33,8 +36,13 @@ class ProcessingThread(QThread):
         self.imgProcFlags = ImageProcessingFlags()
         self.imgProcSettings = ImageProcessingSettings()
         self.statsData = ThreadStatisticsData()
+        self.boxes = [(0, 0, 0, 0)]
+        self.boxesBuffer = DEFAULT_BOXES_BUFFER
+        self.boxesBufferMax = DEFAULT_BOXES_BUFFER
         self.frame = None
         self.currentFrame = None
+        self.detector = detector
+        self.doShow = False
 
     def run(self):
         while True:
@@ -117,16 +125,21 @@ class ProcessingThread(QThread):
                                                   threshold2=self.imgProcSettings.cannyThreshold2,
                                                   apertureSize=self.imgProcSettings.cannyApertureSize,
                                                   L2gradient=self.imgProcSettings.cannyL2gradient)
+                # Detection
+                self.currentFrame, boxes = self.detector.detection(self.currentFrame, self.doShow)
 
                 ##################################
                 # PERFORM IMAGE PROCESSING ABOVE #
                 ##################################
 
-                # Convert Mat to QImage
-                self.frame = matToQImage(self.currentFrame)
+                self.newBoxes.emit(self.deviceUrl, boxes)
 
-                # Inform GUI thread of new frame (QImage)
-                self.newFrame.emit(self.frame)
+                if self.doShow:
+                    # Convert Mat to QImage
+                    self.frame = matToQImage(self.currentFrame)
+
+                    # Inform GUI thread of new frame (QImage)
+                    self.newFrame.emit(self.frame)
 
             # Update statistics
             self.updateFPS(self.processingTime)

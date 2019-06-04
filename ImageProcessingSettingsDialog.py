@@ -68,7 +68,7 @@ class ImageProcessingSettingsDialog(QDialog, Ui_ImageProcessingSettingsDialog):
         # Dilate
         self.imageProcessingSettings.dilateNumberOfIterations = int(self.dilateIterationsEdit.text())
         # Erode
-        self.imageProcessingSettings.erodeNumberOfIterations = int(self.erodeIterationsEdit.text())
+        self.imageProcessingSettings.erodeUrlOfIterations = int(self.erodeIterationsEdit.text())
         # Flip
         if self.flipCodeGroup.checkedButton() == self.flipXAxisButton:
             self.imageProcessingSettings.flipCode = 0
@@ -99,7 +99,7 @@ class ImageProcessingSettingsDialog(QDialog, Ui_ImageProcessingSettingsDialog):
         # Dilate
         self.dilateIterationsEdit.setText(str(self.imageProcessingSettings.dilateNumberOfIterations))
         # Erode
-        self.erodeIterationsEdit.setText(str(self.imageProcessingSettings.erodeNumberOfIterations))
+        self.erodeIterationsEdit.setText(str(self.imageProcessingSettings.erodeUrlOfIterations))
         # Flip
         if self.imageProcessingSettings.flipCode == 0:
             self.flipXAxisButton.setChecked(True)
