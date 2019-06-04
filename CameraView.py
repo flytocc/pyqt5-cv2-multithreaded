@@ -164,7 +164,7 @@ class CameraView(QWidget, Ui_CameraView):
         imageBuffer = self.sharedImageBuffer.getByDeviceUrl(self.deviceUrl)
         # Show [number of images in buffer / image buffer size] in imageBufferLabel
         self.imageBufferLabel.setText("[%d/%d]" % (imageBuffer.size(), imageBuffer.maxSize()))
-        # Show percentage of image bufffer full in imageBufferBar
+        # Show percentage of image buffer full in imageBufferBar
         self.imageBufferBar.setValue(imageBuffer.size())
 
         # Show processing rate in captureRateLabel

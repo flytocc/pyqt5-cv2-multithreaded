@@ -26,53 +26,7 @@
    <string>qt-opencv-multithreaded</string>
   </property>
   <widget class="QWidget" name="centralWidget">
-   <layout class="QVBoxLayout" name="verticalLayout" stretch="0,1">
-    <item>
-     <layout class="QHBoxLayout" name="horizontalLayout">
-      <item>
-       <widget class="QPushButton" name="addCapPushButton_1">
-        <property name="text">
-         <string>Cap1</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QPushButton" name="addCapPushButton_2">
-        <property name="text">
-         <string>Cap2</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QPushButton" name="addCapPushButton_3">
-        <property name="text">
-         <string>Cap3</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QPushButton" name="addCapPushButton_4">
-        <property name="text">
-         <string>Cap4</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QPushButton" name="addCapPushButton_5">
-        <property name="text">
-         <string>Cap5</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QPushButton" name="addCapPushButton_6">
-        <property name="text">
-         <string>Cap6</string>
-        </property>
-       </widget>
-      </item>
-     </layout>
-    </item>
+   <layout class="QVBoxLayout" name="verticalLayout" stretch="1">
     <item>
      <widget class="QTabWidget" name="tabWidget">
       <property name="sizePolicy">
@@ -169,12 +123,6 @@
  </widget>
  <layoutdefault spacing="6" margin="11"/>
  <tabstops>
-  <tabstop>addCapPushButton_1</tabstop>
-  <tabstop>addCapPushButton_2</tabstop>
-  <tabstop>addCapPushButton_3</tabstop>
-  <tabstop>addCapPushButton_4</tabstop>
-  <tabstop>addCapPushButton_5</tabstop>
-  <tabstop>addCapPushButton_6</tabstop>
   <tabstop>tabWidget</tabstop>
  </tabstops>
  <resources/>
