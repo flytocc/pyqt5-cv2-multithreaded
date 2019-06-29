@@ -101,7 +101,10 @@ class CaptureThread(QThread):
             self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, self.height)
 
         if camOpenResult:
-            self.defaultTime = int(1000 / self.cap.get(cv2.CAP_PROP_FPS))
+            try:
+                self.defaultTime = int(1000 / self.cap.get(cv2.CAP_PROP_FPS))
+            except:
+                self.defaultTime = 40
         # Return result
         return camOpenResult
 
